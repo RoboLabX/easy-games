@@ -13,6 +13,12 @@
 <body>
 <h1>Tetris</h1>
 <canvas id="tetris" width="240" height="400"></canvas>
+<div style="text-align:center; margin-top:10px;">
+  <button id="leftBtn">◀</button>
+  <button id="rightBtn">▶</button>
+  <button id="downBtn">▼</button>
+  <button id="rotateBtn">⟳</button>
+</div>
 <p style="font-size:12px; color:#ccc;">This site was built by Oscar, Dad and Robot (14738)</p>
 
 <script>
@@ -196,6 +202,11 @@ const arena = createMatrix(12,20);
 const player = {pos:{x:0,y:0},matrix:null};
 playerReset();
 update();
+document.getElementById('leftBtn').addEventListener('touchstart', () => playerMove(-1));
+document.getElementById('rightBtn').addEventListener('touchstart', () => playerMove(1));
+document.getElementById('downBtn').addEventListener('touchstart', playerDrop);
+document.getElementById('rotateBtn').addEventListener('touchstart', () => playerRotate(1));
+
 </script>
 </body>
 </html>
