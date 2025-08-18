@@ -12,8 +12,10 @@
 </head>
 <body>
 <h1>Tetris</h1>
-<canvas id="tetris" width="240" height="400"></canvas>
-<canvas id="nextPiece" width="80" height="80" style="border:1px solid #ccc;"></canvas>
+<div style="position: relative; display: inline-block;">
+  <canvas id="tetris" width="240" height="400"></canvas>
+  <canvas id="nextPiece" width="80" height="80" style="position:absolute; top:0; right:-100px; border:1px solid #ccc;"></canvas>
+</div>
 <div style="text-align:center; margin-top:10px;">
   <button id="leftBtn">◀</button>
   <button id="rightBtn">▶</button>
@@ -115,14 +117,32 @@ function playerMove(dir){
   if(collide(arena,player)) player.pos.x -= dir;
 }
 
-function playerReset(){
-  const pieces = 'TJLOSZI';
-  player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-  player.pos.y =0;
+function drawNext() {
+  nextCtx.fillStyle = '#111a2b';
+  nextCtx.fillRect(0,0,nextCanvas.width/20,nextCanvas.height/20);
+  drawMatrix(nextPiece, {x:0, y:0}, nextCtx);
+}
+
+function drawMatrix(matrix, offset, context=ctx){
+  matrix.forEach((row,y)=>{
+    row.forEach((value,x)=>{
+      if(value!==0){
+        context.fillStyle = colors[value];
+        context.fillRect(x+offset.x, y+offset.y,1,1);
+      }
+    });
+  });
+}
+
+function playerReset() {
+  player.matrix = nextPiece;
+  player.pos.y = 0;
   player.pos.x = (arena[0].length/2 |0) - (player.matrix[0].length/2 |0);
-  if(collide(arena,player)) {
-    arena.forEach(row=>row.fill(0));
-  }
+  
+  // pick next piece for preview
+  const pieces = 'TJLOSZI'; // you can add new shapes here too
+  nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
+  drawNext(); // refresh preview
 }
 
 function playerRotate(dir){
@@ -176,6 +196,11 @@ document.addEventListener('keydown', event=>{
 // const colors = [null,'#FF0D72','#0DC2FF','#0DFF72','#F538FF','#FF8E0D','#FFE138','#3877FF'];
 const colors = [null,'#FF0D72','#0DC2FF','#0DFF72','#F538FF','#FF8E0D','#FFE138','#3877FF','#FF5733','#33FF57'];
 const arena = createMatrix(12,20);
+const nextCanvas = document.getElementById('nextPiece');
+const nextCtx = nextCanvas.getContext('2d');
+nextCtx.scale(20,20);   // same scale as main canvas
+let nextPiece = createPiece('TJLOSZI'[Math.floor(Math.random()*7)]);
+  
 const player = {pos:{x:0,y:0},matrix:null};
 playerReset();
 update();
