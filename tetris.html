@@ -137,11 +137,10 @@ function drawMatrix(matrix, offset, context=ctx){
 function playerReset() {
   player.matrix = nextPiece;
   player.pos.y = 0;
-  player.pos.x = (arena[0].length/2 |0) - (player.matrix[0].length/2 |0);
+  player.pos.x = (arena[0].length/2 | 0) - (player.matrix[0].length/2 | 0);
   
-  // pick next piece for preview
-  const pieces = 'TJLOSZI'; // you can add new shapes here too
-  nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
+  // use the updated pieces string including new shapes
+  nextPiece = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
   drawNext(); // refresh preview
 }
 
