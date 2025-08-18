@@ -13,6 +13,7 @@
 <body>
 <h1>Tetris</h1>
 <canvas id="tetris" width="240" height="400"></canvas>
+<canvas id="nextPiece" width="80" height="80" style="border:1px solid #ccc;"></canvas>
 <div style="text-align:center; margin-top:10px;">
   <button id="leftBtn">◀</button>
   <button id="rightBtn">▶</button>
@@ -94,6 +95,8 @@ function createPiece(type) {
       [0,7,7],
       [0,0,0]
     ];
+    case 'U': return [[8,0,8],[8,8,8],[0,0,0]];
+    case 'P': return [[9,9,0],[9,9,9],[0,0,0]];
   }
 }
 
@@ -197,7 +200,8 @@ document.addEventListener('keydown', event=>{
   else if(event.keyCode===87) playerRotate(1);
 });
 
-const colors = [null,'#FF0D72','#0DC2FF','#0DFF72','#F538FF','#FF8E0D','#FFE138','#3877FF'];
+// const colors = [null,'#FF0D72','#0DC2FF','#0DFF72','#F538FF','#FF8E0D','#FFE138','#3877FF'];
+const colors = [null,'#FF0D72','#0DC2FF','#0DFF72','#F538FF','#FF8E0D','#FFE138','#3877FF','#FF5733','#33FF57'];
 const arena = createMatrix(12,20);
 const player = {pos:{x:0,y:0},matrix:null};
 playerReset();
