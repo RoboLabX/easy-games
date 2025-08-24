@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Tetris1</title>
+<title>Roblox Tetris</title>
 <style>
   body {
     background-color: #d0e0ff; /* Roblox sky-blue background */
@@ -118,7 +118,7 @@
 </div>
 <div class="hints">
   <p>Desktop: Arrow keys = Move, Up = Rotate, Down = Soft Drop</p>
-  <p>Mobile: Swipe = Move, Tap = Rotate, Double Tap = Soft Drop</p>
+  <p>Mobile: Swipe = Move, Tap = Rotate, Hold = Soft Drop</p>
 </div>
 
 <script>
@@ -197,11 +197,11 @@ function clearLines() {
       boardState.splice(r, 1);
       boardState.unshift(Array(COLS).fill(''));
       linesCleared++;
-      r++; // recheck same row index after shift
+      r++; // recheck same row index
     }
   }
   if(linesCleared > 0){
-    score += linesCleared * 100; // 100 points per line
+    score += linesCleared * 100;
     document.getElementById('score').innerText = score;
   }
 }
@@ -211,20 +211,13 @@ function softDrop(){
   if(isValidMove(piece.x, piece.y+1, piece.coords)){
     piece.y++; 
   } else {
-    // Lock piece
     piece.coords.forEach(([dx,dy])=>{
       boardState[piece.y+dy][piece.x+dx] = piece.shape;
     });
-    
-    // Clear lines and update score
     clearLines();
-    
-    // Generate new piece
     const shapes = Object.keys(SHAPES);
     const nextShape = shapes[Math.floor(Math.random()*shapes.length)];
     const newPiece = {x:4, y:0, shape: nextShape, coords: SHAPES[nextShape]};
-    
-    // Game Over check
     if(!isValidMove(newPiece.x, newPiece.y, newPiece.coords)){
       alert("Game Over!");
       for(let r=0; r<ROWS; r++){
@@ -239,7 +232,6 @@ function softDrop(){
       drawPiece();
       return;
     }
-    
     piece = newPiece;
   }
   drawPiece();
@@ -255,36 +247,33 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-// Mobile swipe/tap with double tap for soft drop
+// Mobile swipe/tap with tap-and-hold for soft drop
 let startX, startY;
-let lastTap = 0;
+let touchTimer = null;
 
 document.addEventListener('touchstart', e=>{
   startX = e.touches[0].clientX;
   startY = e.touches[0].clientY;
+  touchTimer = setTimeout(() => {
+    softDrop(); // long press triggers soft drop
+  }, 500);
 });
 
 document.addEventListener('touchend', e=>{
+  clearTimeout(touchTimer); // cancel if released early
   const endX = e.changedTouches[0].clientX;
   const endY = e.changedTouches[0].clientY;
   const dx = endX - startX;
   const dy = endY - startY;
-  const now = new Date().getTime();
-  const tapLength = now - lastTap;
-  
-  if(tapLength < 300 && Math.abs(dx) < 10 && Math.abs(dy) < 10){
-    softDrop(); // double tap
+
+  if(Math.abs(dx) < 10 && Math.abs(dy) < 10){
+    rotatePiece(); // single tap rotates
   } else {
     if(Math.abs(dx) > Math.abs(dy)){
       if(dx > 30) moveRight();
       else if(dx < -30) moveLeft();
-    } else {
-      if(dy < -30) rotatePiece();
     }
   }
-  
-  if(Math.abs(dx) < 10 && Math.abs(dy) < 10) rotatePiece(); // single tap
-  lastTap = now;
 });
 
 // Automatic falling
