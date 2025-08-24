@@ -3,173 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Tetris</title>
+<title>Roblox Tetris1</title>
 <style>
-  body {
-    background-color: #d0e0ff; /* light sky blue Roblox vibe */
-    font-family: 'Press Start 2P', monospace;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
-    min-height: 100vh;
-  }
+body {
+  background-color: #d0e0ff;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
 
-  .container {
-    display: flex;
-    gap: 20px;
-  }
+.container {
+  display: flex;
+  gap: 20px;
+}
 
-  .board {
-    display: grid;
-    grid-template-rows: repeat(20, 34px);
-    grid-template-columns: repeat(10, 34px);
-    background-color: #f0f0f0; /* Roblox stage floor */
-    border: 4px solid #000;
-    border-radius: 6px;
-    padding: 5px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    position: relative;
-  }
+.board {
+  display: grid;
+  grid-template-rows: repeat(20, 34px);
+  grid-template-columns: repeat(10, 34px);
+  background-color: #f0f0f0;
+  border: 4px solid #000;
+  border-radius: 6px;
+  padding: 5px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  position: relative;
+}
 
-  .cell {
-    width: 32px;
-    height: 32px;
-    margin: 1px;
-    border-radius: 4px;
-    border: 2px solid #fff;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    position: relative;
-  }
+.cell {
+  width: 32px;
+  height: 32px;
+  margin: 1px;
+  border-radius: 4px;
+  border: 2px solid #fff;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  position: relative;
+}
 
-  .cell::before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 40%;
-    background: rgba(255,255,255,0.3);
-    border-radius: 4px 4px 0 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
+.cell::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 40%;
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px 4px 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
 
-  /* Tetromino colors */
-  .I { background: linear-gradient(to bottom, #00f0f0, #00c0c0); }
-  .O { background: linear-gradient(to bottom, #f0f000, #c0c000); }
-  .T { background: linear-gradient(to bottom, #a000f0, #7000c0); }
-  .L { background: linear-gradient(to bottom, #ff8800, #cc5500); }
-  .J { background: linear-gradient(to bottom, #0000ff, #0000cc); }
-  .S { background: linear-gradient(to bottom, #00ff00, #00cc00); }
-  .Z { background: linear-gradient(to bottom, #ff0000, #cc0000); }
+/* Tetromino colors */
+.I { background: linear-gradient(to bottom, #00f0f0, #00c0c0); }
+.O { background: linear-gradient(to bottom, #f0f000, #c0c000); }
+.T { background: linear-gradient(to bottom, #a000f0, #7000c0); }
+.L { background: linear-gradient(to bottom, #ff8800, #cc5500); }
+.J { background: linear-gradient(to bottom, #0000ff, #0000cc); }
+.S { background: linear-gradient(to bottom, #00ff00, #00cc00); }
+.Z { background: linear-gradient(to bottom, #ff0000, #cc0000); }
 
-  /* Side panel */
-  .side-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-  .next-piece, .score {
-    background-color: #f0f0f0;
-    border: 3px solid #000;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  }
+.next-piece, .score {
+  background-color: #f0f0f0;
+  border: 3px solid #000;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
 
-  .next-grid {
-    display: grid;
-    grid-template-rows: repeat(4, 32px);
-    grid-template-columns: repeat(4, 32px);
-    gap: 2px;
-    justify-content: center;
-    margin-top: 10px;
-  }
+.next-grid {
+  display: grid;
+  grid-template-rows: repeat(4, 32px);
+  grid-template-columns: repeat(4, 32px);
+  gap: 2px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.hints {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+}
 
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="board" id="board"></div>
-    <div class="side-panel">
-      <div class="score">
-        <h3>Score</h3>
-        <div id="score">0</div>
-      </div>
-      <div class="next-piece">
-        <h3>Next</h3>
-        <div class="next-grid" id="nextGrid"></div>
-      </div>
+<div class="container">
+  <div class="board" id="board"></div>
+  <div class="side-panel">
+    <div class="score">
+      <h3>Score</h3>
+      <div id="score">0</div>
+    </div>
+    <div class="next-piece">
+      <h3>Next</h3>
+      <div class="next-grid" id="nextGrid"></div>
     </div>
   </div>
+</div>
+<div class="hints">
+  <p>Desktop: Arrow keys = Move, Up = Rotate, Down = Soft Drop</p>
+  <p>Mobile: Swipe = Move, Down = Soft Drop, Tap = Rotate</p>
+</div>
 
 <script>
-  // Basic board setup
-  const ROWS = 20, COLS = 10;
-  const board = document.getElementById('board');
-  const cells = [];
-
-  for(let r=0; r<ROWS; r++){
-    for(let c=0; c<COLS; c++){
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      board.appendChild(cell);
-      cells.push(cell);
-    }
-  }
-
-  // Mock tetromino piece for demonstration
-  let piece = { x: 4, y: 0, shape: 'T', coords: [[0,0],[1,0],[2,0],[1,1]] };
-
-  function drawPiece(){
-    // Clear previous
-    cells.forEach(cell => cell.className='cell');
-    piece.coords.forEach(([dx,dy]) => {
-      let idx = (piece.y + dy) * COLS + (piece.x + dx);
-      if(idx >=0 && idx < cells.length) cells[idx].classList.add(piece.shape);
-    });
-  }
-
-  drawPiece();
-
-  // Mobile touch controls
-  let startX, startY;
-  document.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-  });
-
-  document.addEventListener('touchend', e => {
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - startX;
-    const dy = endY - startY;
-
-    if(Math.abs(dx) > Math.abs(dy)){
-      if(dx > 30) moveRight();
-      else if(dx < -30) moveLeft();
-    } else {
-      if(dy > 30) softDrop();
-      else if(dy < -30) hardDrop();
-    }
-
-    if(Math.abs(dx) < 10 && Math.abs(dy) < 10){
-      rotatePiece();
-    }
-
-    drawPiece();
-  });
-
-  function moveLeft(){ piece.x = Math.max(0, piece.x-1); }
-  function moveRight(){ piece.x = Math.min(COLS-3, piece.x+1); }
-  function softDrop(){ piece.y = Math.min(ROWS-2, piece.y+1); }
-  function hardDrop(){ piece.y = ROWS-2; }
-  function rotatePiece(){
-    piece.coords = piece.coords.map(([x,y]) => [y, -x]);
-  }
-
-</script>
-</body>
-</html>
+const ROWS = 20, COLS = 10;
+const board = document.getElement
