@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Tetris</title>
+<title>Roblox Tetris1</title>
 <style>
   body {
     background-color: #d0e0ff; /* Roblox sky-blue background */
@@ -189,6 +189,23 @@ function rotatePiece(){
   drawPiece();
 }
 
+// Line clearing and scoring
+function clearLines() {
+  let linesCleared = 0;
+  for(let r = ROWS - 1; r >= 0; r--){
+    if(boardState[r].every(cell => cell !== '')){
+      boardState.splice(r, 1);
+      boardState.unshift(Array(COLS).fill(''));
+      linesCleared++;
+      r++; // recheck same row index after shift
+    }
+  }
+  if(linesCleared > 0){
+    score += linesCleared * 100; // 100 points per line
+    document.getElementById('score').innerText = score;
+  }
+}
+
 // Soft drop and piece locking with game over
 function softDrop(){
   if(isValidMove(piece.x, piece.y+1, piece.coords)){
@@ -199,6 +216,9 @@ function softDrop(){
       boardState[piece.y+dy][piece.x+dx] = piece.shape;
     });
     
+    // Clear lines and update score
+    clearLines();
+    
     // Generate new piece
     const shapes = Object.keys(SHAPES);
     const nextShape = shapes[Math.floor(Math.random()*shapes.length)];
@@ -207,7 +227,6 @@ function softDrop(){
     // Game Over check
     if(!isValidMove(newPiece.x, newPiece.y, newPiece.coords)){
       alert("Game Over!");
-      // Reset board and score
       for(let r=0; r<ROWS; r++){
         for(let c=0; c<COLS; c++){
           boardState[r][c] = '';
@@ -250,7 +269,6 @@ document.addEventListener('touchend', e=>{
   const endY = e.changedTouches[0].clientY;
   const dx = endX - startX;
   const dy = endY - startY;
-  
   const now = new Date().getTime();
   const tapLength = now - lastTap;
   
