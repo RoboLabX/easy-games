@@ -3,284 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Tetris</title>
+<title>Roblox Style Tetris1</title>
 <style>
   body {
-    background-color: #d0e0ff; /* Roblox sky-blue background */
-    font-family: 'Press Start 2P', monospace;
+    background-color: #1e1e2e;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    padding: 20px;
+    height: 100vh;
     margin: 0;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
   }
-
   .container {
     display: flex;
-    gap: 20px;
-    justify-content: center;
+    flex-direction: row;
+    gap: 15px;
     align-items: flex-start;
-    flex-wrap: nowrap;
   }
-
-  .board {
-    display: grid;
-    grid-template-rows: repeat(20, 1fr);
-    grid-template-columns: repeat(10, 1fr);
-    background-color: #f0f0f0;
-    border: 4px solid #000;
-    border-radius: 6px;
-    padding: 5px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    width: min(60vw, 400px);
-    aspect-ratio: 10 / 20;
-  }
-
-  .cell {
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    border: 2px solid #fff;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    position: relative;
-  }
-
-  .cell::before {
-    content: '';
+  canvas {
+    background-color: #111;
+    border: 4px solid #00ff90;
+    border-radius: 10px;
     display: block;
-    width: 100%;
-    height: 40%;
-    background: rgba(255,255,255,0.3);
-    border-radius: 4px 4px 0 0;
-    position: absolute;
-    top: 0;
-    left: 0;
   }
-
-  .I { background: linear-gradient(to bottom, #00f0f0, #00c0c0); }
-  .O { background: linear-gradient(to bottom, #f0f000, #c0c000); }
-  .T { background: linear-gradient(to bottom, #a000f0, #7000c0); }
-  .L { background: linear-gradient(to bottom, #ff8800, #cc5500); }
-  .J { background: linear-gradient(to bottom, #0000ff, #0000cc); }
-  .S { background: linear-gradient(to bottom, #00ff00, #00cc00); }
-  .Z { background: linear-gradient(to bottom, #ff0000, #cc0000); }
-
   .side-panel {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    flex-shrink: 0;
-    width: 120px;
+    gap: 15px;
   }
-
-  .next-piece, .score {
-    background-color: #f0f0f0;
-    border: 3px solid #000;
+  .panel {
+    background-color: #2a2a3d;
+    border: 3px solid #00ff90;
+    border-radius: 10px;
     padding: 10px;
-    border-radius: 6px;
     text-align: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    min-width: 100px;
   }
-
-  .next-grid {
-    display: grid;
-    grid-template-rows: repeat(4, 32px);
-    grid-template-columns: repeat(4, 32px);
-    gap: 2px;
-    justify-content: center;
+  .hint {
     margin-top: 10px;
+    font-size: 14px;
+    color: #aaa;
   }
-
-  .hints {
-    margin-top: 20px;
-    text-align: center;
-    font-size: 12px;
-  }
-
-  @media(max-width: 500px){
-    .container { gap: 10px; }
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+      align-items: center;
+    }
+    .side-panel {
+      flex-direction: row;
+      justify-content: center;
+      gap: 10px;
+    }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="board" id="board"></div>
+  <canvas id="tetris" width="240" height="400"></canvas>
   <div class="side-panel">
-    <div class="score">
+    <div class="panel">
       <h3>Score</h3>
       <div id="score">0</div>
     </div>
-    <div class="next-piece">
+    <div class="panel">
       <h3>Next</h3>
-      <div class="next-grid" id="nextGrid"></div>
+      <canvas id="next" width="80" height="80"></canvas>
     </div>
   </div>
 </div>
-<div class="hints">
-  <p>Desktop: Arrow keys = Move, Up = Rotate, Down = Soft Drop</p>
-  <p>Mobile: Swipe = Move, Tap = Rotate, Hold = Soft Drop</p>
+<div class="hint">
+  Controls: Arrow keys ← → ↓ to move, ↑ to rotate, Space = drop.<br>
+  Mobile: Swipe = move, Tap = rotate, Hold = soft drop.
 </div>
 
 <script>
-const ROWS = 20, COLS = 10;
-const board = document.getElementById('board');
-const cells = [];
-const boardState = Array.from({length: ROWS}, () => Array(COLS).fill(''));
+const canvas = document.getElementById('tetris');
+const context = canvas.getContext('2d');
+context.scale(20, 20);
+
+const nextCanvas = document.getElementById('next');
+const nextCtx = nextCanvas.getContext('2d');
+nextCtx.scale(20, 20);
+
+const matrix = Array.from({length:20}, () => Array(12).fill(0));
+let current, nextPiece;
 let score = 0;
 
-// Initialize cells
-for(let r=0; r<ROWS; r++){
-  for(let c=0; c<COLS; c++){
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    board.appendChild(cell);
-    cells.push(cell);
+const colors = [
+  null,
+  '#00f0f0', '#0000f0', '#f0a000',
+  '#f0f000', '#00f000', '#a000f0', '#f00000'
+];
+
+function createPiece(type){
+  switch(type){
+    case 'T': return [[0,0,0],[1,1,1],[0,1,0]];
+    case 'O': return [[2,2],[2,2]];
+    case 'L': return [[0,3,0],[0,3,0],[0,3,3]];
+    case 'J': return [[0,4,0],[0,4,0],[4,4,0]];
+    case 'I': return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
+    case 'S': return [[0,6,6],[6,6,0],[0,0,0]];
+    case 'Z': return [[7,7,0],[0,7,7],[0,0,0]];
   }
 }
 
-// Tetromino shapes
-const SHAPES = {
-  I: [[0,0],[1,0],[2,0],[3,0]],
-  O: [[0,0],[1,0],[0,1],[1,1]],
-  T: [[0,0],[1,0],[2,0],[1,1]],
-  L: [[0,0],[1,0],[2,0],[2,1]],
-  J: [[0,0],[1,0],[2,0],[0,1]],
-  S: [[1,0],[2,0],[0,1],[1,1]],
-  Z: [[0,0],[1,0],[1,1],[2,1]]
-};
-
-let piece = { x: 4, y: 0, shape: 'T', coords: SHAPES['T'] };
-
-function drawBoard(){
-  for(let r=0; r<ROWS; r++){
-    for(let c=0; c<COLS; c++){
-      const idx = r*COLS + c;
-      cells[idx].className = 'cell';
-      if(boardState[r][c]) cells[idx].classList.add(boardState[r][c]);
-    }
-  }
-}
-
-function drawPiece(){
-  drawBoard();
-  piece.coords.forEach(([dx,dy])=>{
-    const x = piece.x + dx;
-    const y = piece.y + dy;
-    if(y>=0 && y<ROWS && x>=0 && x<COLS){
-      const idx = y*COLS + x;
-      cells[idx].classList.add(piece.shape);
-    }
+function drawMatrix(matrix, offset, ctx){
+  matrix.forEach((row,y)=>{
+    row.forEach((value,x)=>{
+      if(value){
+        ctx.fillStyle = colors[value];
+        ctx.fillRect(x+offset.x,y+offset.y,1,1);
+        ctx.strokeStyle = "#111";
+        ctx.strokeRect(x+offset.x,y+offset.y,1,1);
+      }
+    });
   });
 }
 
-// Collision check
-function isValidMove(px, py, coords){
-  return coords.every(([dx,dy])=>{
-    const x = px+dx, y = py+dy;
-    return x>=0 && x<COLS && y>=0 && y<ROWS && !boardState[y][x];
+function collide(piece, posY, posX){
+  const m = piece, o = {x:posY, y:posX};
+  for(let y=0;y<m.length;++y){
+    for(let x=0;x<m[y].length;++x){
+      if(m[y][x] && (matrix[y+o.y] && matrix[y+o.y][x+o.x])!==0){
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function merge(piece){
+  piece.piece.forEach((row,y)=>{
+    row.forEach((value,x)=>{
+      if(value){
+        matrix[y+piece.y][x+piece.x] = value;
+      }
+    });
   });
 }
 
-function moveLeft(){ if(isValidMove(piece.x-1,piece.y,piece.coords)) piece.x--; drawPiece(); }
-function moveRight(){ if(isValidMove(piece.x+1,piece.y,piece.coords)) piece.x++; drawPiece(); }
-function rotatePiece(){
-  const newCoords = piece.coords.map(([x,y])=>[y,-x]);
-  if(isValidMove(piece.x,piece.y,newCoords)) piece.coords = newCoords;
-  drawPiece();
-}
-
-// Line clearing and scoring
-function clearLines() {
-  let linesCleared = 0;
-  for(let r = ROWS - 1; r >= 0; r--){
-    if(boardState[r].every(cell => cell !== '')){
-      boardState.splice(r, 1);
-      boardState.unshift(Array(COLS).fill(''));
-      linesCleared++;
-      r++; // recheck same row index
-    }
+function playerReset(){
+  const pieces = 'TJLOSZI';
+  current = {
+    piece: createPiece(pieces[Math.floor(Math.random()*pieces.length)]),
+    x: 4,
+    y: 0
+  };
+  if(nextPiece){
+    current.piece = nextPiece;
   }
-  if(linesCleared > 0){
-    score += linesCleared * 100;
+  nextPiece = createPiece(pieces[Math.floor(Math.random()*pieces.length)]);
+  if(collide(current.piece,current.x,current.y)){
+    // Game Over
+    matrix.forEach(row=>row.fill(0));
+    score = 0;
     document.getElementById('score').innerText = score;
   }
+  drawNext();
 }
 
-// Soft drop and piece locking with game over
-function softDrop(){
-  if(isValidMove(piece.x, piece.y+1, piece.coords)){
-    piece.y++; 
-  } else {
-    piece.coords.forEach(([dx,dy])=>{
-      boardState[piece.y+dy][piece.x+dx] = piece.shape;
-    });
-    clearLines();
-    const shapes = Object.keys(SHAPES);
-    const nextShape = shapes[Math.floor(Math.random()*shapes.length)];
-    const newPiece = {x:4, y:0, shape: nextShape, coords: SHAPES[nextShape]};
-    if(!isValidMove(newPiece.x, newPiece.y, newPiece.coords)){
-      alert("Game Over!");
-      for(let r=0; r<ROWS; r++){
-        for(let c=0; c<COLS; c++){
-          boardState[r][c] = '';
-        }
-      }
-      score = 0;
-      document.getElementById('score').innerText = score;
-      drawBoard();
-      piece = newPiece;
-      drawPiece();
+function drawNext(){
+  nextCtx.fillStyle = "#2a2a3d";
+  nextCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+  drawMatrix(nextPiece, {x:1,y:1}, nextCtx);
+}
+
+function rotatePiece(){
+  const rotated = current.piece[0].map((_,i)=>current.piece.map(r=>r[i])).reverse();
+
+  let testX = current.x;
+
+  if(!collide(rotated,testX,current.y)){
+    current.piece = rotated;
+    return;
+  }
+
+  // Wall kicks
+  for(let offset of [-1,1,-2,2]){
+    if(!collide(rotated,testX+offset,current.y)){
+      current.x += offset;
+      current.piece = rotated;
       return;
     }
-    piece = newPiece;
   }
-  drawPiece();
 }
 
-// Keyboard controls
-document.addEventListener('keydown', e=>{
-  switch(e.key){
-    case 'ArrowLeft': moveLeft(); break;
-    case 'ArrowRight': moveRight(); break;
-    case 'ArrowDown': softDrop(); break;
-    case 'ArrowUp': rotatePiece(); break;
+function drop(){
+  current.y++;
+  if(collide(current.piece,current.x,current.y)){
+    current.y--;
+    merge(current);
+    sweep();
+    playerReset();
   }
+}
+
+function move(offset){
+  current.x += offset;
+  if(collide(current.piece,current.x,current.y)){
+    current.x -= offset;
+  }
+}
+
+function softDrop(){
+  drop();
+}
+
+function sweep(){
+  let rowCount=1;
+  outer: for(let y=matrix.length-1;y>=0;--y){
+    for(let x=0;x<matrix[y].length;++x){
+      if(matrix[y][x]===0){
+        continue outer;
+      }
+    }
+    const row = matrix.splice(y,1)[0].fill(0);
+    matrix.unshift(row);
+    y++;
+    score += rowCount*10;
+    rowCount*=2;
+  }
+  document.getElementById('score').innerText = score;
+}
+
+function draw(){
+  context.fillStyle = "#000";
+  context.fillRect(0,0,canvas.width,canvas.height);
+  drawMatrix(matrix,{x:0,y:0},context);
+  drawMatrix(current.piece,{x:current.x,y:current.y},context);
+}
+
+let dropCounter=0;
+let dropInterval=1000;
+let lastTime=0;
+
+function update(time=0){
+  const delta=time-lastTime;
+  lastTime=time;
+  dropCounter+=delta;
+  if(dropCounter>dropInterval){
+    drop();
+    dropCounter=0;
+  }
+  draw();
+  requestAnimationFrame(update);
+}
+
+// Controls
+document.addEventListener('keydown',event=>{
+  if(event.keyCode===37){move(-1);}
+  else if(event.keyCode===39){move(1);}
+  else if(event.keyCode===40){softDrop();}
+  else if(event.keyCode===38){rotatePiece();}
+  else if(event.keyCode===32){while(!collide(current.piece,current.x,current.y+1)){current.y++;}}
 });
 
-// Mobile swipe/tap with tap-and-hold for soft drop
-let startX, startY;
-let touchTimer = null;
-
-document.addEventListener('touchstart', e=>{
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-  touchTimer = setTimeout(() => {
-    softDrop(); // long press triggers soft drop
-  }, 500);
+// Touch Controls
+let touchStartX=null, touchStartY=null, touchStartTime=null;
+canvas.addEventListener('touchstart',e=>{
+  const touch=e.touches[0];
+  touchStartX=touch.clientX;
+  touchStartY=touch.clientY;
+  touchStartTime=Date.now();
 });
-
-document.addEventListener('touchend', e=>{
-  clearTimeout(touchTimer); // cancel if released early
-  const endX = e.changedTouches[0].clientX;
-  const endY = e.changedTouches[0].clientY;
-  const dx = endX - startX;
-  const dy = endY - startY;
-
-  if(Math.abs(dx) < 10 && Math.abs(dy) < 10){
-    rotatePiece(); // single tap rotates
-  } else {
-    if(Math.abs(dx) > Math.abs(dy)){
-      if(dx > 30) moveRight();
-      else if(dx < -30) moveLeft();
+canvas.addEventListener('touchend',e=>{
+  const touch=e.changedTouches[0];
+  const dx=touch.clientX-touchStartX;
+  const dy=touch.clientY-touchStartY;
+  const dt=Date.now()-touchStartTime;
+  
+  if(Math.abs(dx)>Math.abs(dy)){
+    if(dx>30) move(1);
+    else if(dx<-30) move(-1);
+  }else{
+    if(dy>30){ // down swipe
+      softDrop();
+    }
+  }
+  if(Math.abs(dx)<10 && Math.abs(dy)<10){
+    if(dt>300){ // tap+hold
+      softDrop();
+    } else {
+      rotatePiece(); // quick tap
     }
   }
 });
 
-// Automatic falling
-setInterval(softDrop, 500);
-
-// Initial draw
-window.addEventListener('load', drawPiece);
+// Start
+playerReset();
+update();
 </script>
 </body>
 </html>
