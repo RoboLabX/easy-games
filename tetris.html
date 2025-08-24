@@ -3,95 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Tetris1</title>
+<title>Roblox Tetris</title>
 <style>
-body {
-  background-color: #d0e0ff;
-  font-family: 'Press Start 2P', monospace;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
+  body {
+    background-color: #d0e0ff; /* your preferred background */
+    font-family: 'Press Start 2P', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
 
-.container {
-  display: flex;
-  gap: 20px;
-}
+  .container {
+    display: flex;
+    gap: 20px;
+  }
 
-.board {
-  display: grid;
-  grid-template-rows: repeat(20, 34px);
-  grid-template-columns: repeat(10, 34px);
-  background-color: #f0f0f0;
-  border: 4px solid #000;
-  border-radius: 6px;
-  padding: 5px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  position: relative;
-}
+  .board {
+    display: grid;
+    grid-template-rows: repeat(20, 34px);
+    grid-template-columns: repeat(10, 34px);
+    background-color: #f0f0f0;
+    border: 4px solid #000;
+    border-radius: 6px;
+    padding: 5px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    position: relative;
+  }
 
-.cell {
-  width: 32px;
-  height: 32px;
-  margin: 1px;
-  border-radius: 4px;
-  border: 2px solid #fff;
-  box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-  position: relative;
-}
+  .cell {
+    width: 32px;
+    height: 32px;
+    margin: 1px;
+    border-radius: 4px;
+    border: 2px solid #fff;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    position: relative;
+  }
 
-.cell::before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 40%;
-  background: rgba(255,255,255,0.3);
-  border-radius: 4px 4px 0 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
+  .cell::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 40%;
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px 4px 0 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
 
-/* Tetromino colors */
-.I { background: linear-gradient(to bottom, #00f0f0, #00c0c0); }
-.O { background: linear-gradient(to bottom, #f0f000, #c0c000); }
-.T { background: linear-gradient(to bottom, #a000f0, #7000c0); }
-.L { background: linear-gradient(to bottom, #ff8800, #cc5500); }
-.J { background: linear-gradient(to bottom, #0000ff, #0000cc); }
-.S { background: linear-gradient(to bottom, #00ff00, #00cc00); }
-.Z { background: linear-gradient(to bottom, #ff0000, #cc0000); }
+  /* Tetromino colors */
+  .I { background: linear-gradient(to bottom, #00f0f0, #00c0c0); }
+  .O { background: linear-gradient(to bottom, #f0f000, #c0c000); }
+  .T { background: linear-gradient(to bottom, #a000f0, #7000c0); }
+  .L { background: linear-gradient(to bottom, #ff8800, #cc5500); }
+  .J { background: linear-gradient(to bottom, #0000ff, #0000cc); }
+  .S { background: linear-gradient(to bottom, #00ff00, #00cc00); }
+  .Z { background: linear-gradient(to bottom, #ff0000, #cc0000); }
 
-.side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-.next-piece, .score {
-  background-color: #f0f0f0;
-  border: 3px solid #000;
-  padding: 10px;
-  border-radius: 6px;
-  text-align: center;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-}
+  .next-piece, .score {
+    background-color: #f0f0f0;
+    border: 3px solid #000;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
 
-.next-grid {
-  display: grid;
-  grid-template-rows: repeat(4, 32px);
-  grid-template-columns: repeat(4, 32px);
-  gap: 2px;
-  justify-content: center;
-  margin-top: 10px;
-}
+  .next-grid {
+    display: grid;
+    grid-template-rows: repeat(4, 32px);
+    grid-template-columns: repeat(4, 32px);
+    gap: 2px;
+    justify-content: center;
+    margin-top: 10px;
+  }
 
-.hints {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 12px;
-}
-
+  .hints {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -115,4 +114,121 @@ body {
 
 <script>
 const ROWS = 20, COLS = 10;
-const board = document.getElement
+const board = document.getElementById('board');
+const cells = [];
+const boardState = Array.from({length: ROWS}, () => Array(COLS).fill(''));
+let score = 0;
+
+// Initialize cells
+for(let r=0; r<ROWS; r++){
+  for(let c=0; c<COLS; c++){
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    board.appendChild(cell);
+    cells.push(cell);
+  }
+}
+
+// Tetromino shapes
+const SHAPES = {
+  I: [[0,0],[1,0],[2,0],[3,0]],
+  O: [[0,0],[1,0],[0,1],[1,1]],
+  T: [[0,0],[1,0],[2,0],[1,1]],
+  L: [[0,0],[1,0],[2,0],[2,1]],
+  J: [[0,0],[1,0],[2,0],[0,1]],
+  S: [[1,0],[2,0],[0,1],[1,1]],
+  Z: [[0,0],[1,0],[1,1],[2,1]]
+};
+
+let piece = { x: 4, y: 0, shape: 'T', coords: SHAPES['T'] };
+
+function drawBoard(){
+  for(let r=0; r<ROWS; r++){
+    for(let c=0; c<COLS; c++){
+      const idx = r*COLS + c;
+      cells[idx].className = 'cell';
+      if(boardState[r][c]) cells[idx].classList.add(boardState[r][c]);
+    }
+  }
+}
+
+function drawPiece(){
+  drawBoard();
+  piece.coords.forEach(([dx,dy])=>{
+    const x = piece.x + dx;
+    const y = piece.y + dy;
+    if(y>=0 && y<ROWS && x>=0 && x<COLS){
+      const idx = y*COLS + x;
+      cells[idx].classList.add(piece.shape);
+    }
+  });
+}
+
+// Movement functions with collision check
+function isValidMove(px, py, coords){
+  return coords.every(([dx,dy])=>{
+    const x = px+dx, y = py+dy;
+    return x>=0 && x<COLS && y>=0 && y<ROWS && !boardState[y][x];
+  });
+}
+
+function moveLeft(){ if(isValidMove(piece.x-1,piece.y,piece.coords)) piece.x--; drawPiece(); }
+function moveRight(){ if(isValidMove(piece.x+1,piece.y,piece.coords)) piece.x++; drawPiece(); }
+function softDrop(){
+  if(isValidMove(piece.x,piece.y+1,piece.coords)){
+    piece.y++; 
+  } else {
+    // Lock piece
+    piece.coords.forEach(([dx,dy])=>{
+      boardState[piece.y+dy][piece.x+dx]=piece.shape;
+    });
+    // Reset piece (simple random)
+    const shapes = Object.keys(SHAPES);
+    const nextShape = shapes[Math.floor(Math.random()*shapes.length)];
+    piece = {x:4, y:0, shape: nextShape, coords: SHAPES[nextShape]};
+  }
+  drawPiece();
+}
+function rotatePiece(){
+  const newCoords = piece.coords.map(([x,y])=>[y,-x]);
+  if(isValidMove(piece.x,piece.y,newCoords)) piece.coords = newCoords;
+  drawPiece();
+}
+
+// Keyboard
+document.addEventListener('keydown', e=>{
+  switch(e.key){
+    case 'ArrowLeft': moveLeft(); break;
+    case 'ArrowRight': moveRight(); break;
+    case 'ArrowDown': softDrop(); break;
+    case 'ArrowUp': rotatePiece(); break;
+  }
+});
+
+// Mobile
+let startX, startY;
+document.addEventListener('touchstart', e=>{
+  startX=e.touches[0].clientX;
+  startY=e.touches[0].clientY;
+});
+document.addEventListener('touchend', e=>{
+  const endX=e.changedTouches[0].clientX;
+  const endY=e.changedTouches[0].clientY;
+  const dx=endX-startX, dy=endY-startY;
+  if(Math.abs(dx)>Math.abs(dy)){
+    if(dx>30) moveRight();
+    else if(dx<-30) moveLeft();
+  } else {
+    if(dy>30) softDrop();
+    else if(dy<-30) rotatePiece(); // swipe up rotates
+  }
+  if(Math.abs(dx)<10 && Math.abs(dy)<10) rotatePiece(); // tap
+});
+
+// Automatic fall
+setInterval(softDrop, 500);
+
+drawPiece();
+</script>
+</body>
+</html>
