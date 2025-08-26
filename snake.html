@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Game</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background-color: black;
+      border: 4px solid grey;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [{ x: 10, y: 10 }];
+    let velocity = { x: 0, y: 0 };
+    let lastDirection = { x: 0, y: 0 };
+    let growing = false;
+
+    let apple = { x: 5, y: 5 };
+    let redApple = null; // Red apple starts inactive
+    let applesEaten = 0;
+    let redAppleTimer = 0;
+
+    function draw() {
+      // Clear
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw normal apple
+      ctx.fillStyle = "white";
+      ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+
+      // Draw red apple if active
+      if (redApple) {
+        ctx.fillStyle = "red";
+        ctx.fillRect(redApple.x * gridSize, redApple.y * gridSize, gridSize, gridSize);
+      }
+
+      // Draw snake
+      snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? "#00BFFF" : "blue";
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      });
+    }
+
+    function update() {
+      if (velocity.x === 0 && velocity.y === 0) return;
+
+      const head = {
+        x: snake[0].x + velocity.x,
+        y: snake[0].y + velocity.y
+      };
+
+      // Wall collision
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        resetGame();
+        return;
+      }
+
+      // Self collision
+      for (let segment of snake) {
+        if (segment.x === head.x && segment.y === head.y) {
+          resetGame();
+          return;
+        }
+      }
+
+      snake.unshift(head);
+
+      // Eat white apple
+      if (head.x === apple.x && head.y === apple.y) {
+        applesEaten++;
+        growing = true;
+        placeApple();
+
+        if (applesEaten % 3 === 0) {
+          spawnRedApple();
+        }
+      }
+
+      // Eat red apple
+      if (redApple && head.x === redApple.x && head.y === redApple.y) {
+        shrinkSnake();
+        redApple = null;
+      }
+
+      if (!growing) {
+        snake.pop();
+      } else {
+        growing = false;
+      }
+
+      // Decrease red apple timer
+      if (redApple) {
+        redAppleTimer--;
+        if (redAppleTimer <= 0) {
+          redApple = null;
+        }
+      }
+
+      lastDirection = { ...velocity };
+    }
+
+    function placeApple() {
+      apple = randomEmptyTile();
+    }
+
+    function spawnRedApple() {
+      redApple = randomEmptyTile();
+      redAppleTimer = 500; // lasts ~10 ticks (1s at 100ms per tick)
+    }
+
+    function randomEmptyTile() {
+      let newPos;
+      while (true) {
+        newPos = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+        if (
+          !snake.some(segment => segment.x === newPos.x && segment.y === newPos.y) &&
+          (redApple == null || (newPos.x !== redApple.x || newPos.y !== redApple.y)) &&
+          (apple == null || (newPos.x !== apple.x || newPos.y !== apple.y))
+        ) {
+          return newPos;
+        }
+      }
+    }
+
+    function shrinkSnake() {
+      const shrinkAmount = 3;
+      if (snake.length > 1) {
+        for (let i = 0; i < shrinkAmount; i++) {
+          if (snake.length > 1) {
+            snake.pop();
+          }
+        }
+      }
+    }
+
+    function resetGame() {
+      alert("Game Over! Press OK to restart.");
+      snake = [{ x: 10, y: 10 }];
+      velocity = { x: 0, y: 0 };
+      growing = false;
+      lastDirection = { x: 0, y: 0 };
+      applesEaten = 0;
+      redApple = null;
+      placeApple();
+    }
+
+    function gameTick() {
+      update();
+      draw();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+          if (lastDirection.y !== 1) velocity = { x: 0, y: -1 };
+          break;
+        case "ArrowDown":
+          if (lastDirection.y !== -1) velocity = { x: 0, y: 1 };
+          break;
+        case "ArrowLeft":
+          if (lastDirection.x !== 1) velocity = { x: -1, y: 0 };
+          break;
+        case "ArrowRight":
+          if (lastDirection.x !== -1) velocity = { x: 1, y: 0 };
+          break;
+      }
+    });
+
+    setInterval(gameTick, 100);
+  </script>
+</body>
+</html>
