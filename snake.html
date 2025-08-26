@@ -1,31 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Snake Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connected Snake Game</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+
     body {
       margin: 0;
-      background-color: black;
+      background: radial-gradient(circle at center, #0a0f30, #000020);
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      font-family: 'Montserrat', sans-serif;
+      color: white;
       height: 100vh;
+      justify-content: center;
+      user-select: none;
+      overflow: hidden;
+      position: relative;
     }
+
+    /* Subtle abstract glowing blobs */
+    body::before, body::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 300px; height: 300px;
+      background: #00bfff;
+      top: 10%;
+      left: 15%;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: #1e90ff;
+      bottom: 10%;
+      right: 10%;
+    }
+
+    #scoreDisplay {
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 25px;
+      border-radius: 12px;
+      box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.5),
+        inset 0 -2px 5px rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+      min-width: 120px;
+      text-align: center;
+      letter-spacing: 1.2px;
+      position: relative;
+      z-index: 1;
+    }
+
     canvas {
-      background-color: black;
+      border-radius: 16px;
       border: 4px solid grey;
+      box-shadow:
+        inset 0 0 20px #555,
+        0 0 30px #123a70;
+      background: transparent;
       display: block;
+      position: relative;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
+  <div id="scoreDisplay">Score: 1</div>
   <canvas id="gameCanvas" width="400" height="400"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("scoreDisplay");
 
     const gridSize = 20;
     const tileCount = canvas.width / gridSize;
@@ -35,31 +91,135 @@
     let lastDirection = { x: 0, y: 0 };
     let growing = false;
 
-    let apple = { x: 5, y: 5 };
-    let redApple = null; // Red apple starts inactive
-    let applesEaten = 0;
+    let whiteApples = [];
+    const whiteAppleCount = 3;
+
+    let redApple = null;
     let redAppleTimer = 0;
+    let applesEaten = 0;
 
-    function draw() {
-      // Clear
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    let score = 1;
+    updateScoreDisplay();
 
-      // Draw normal apple
-      ctx.fillStyle = "white";
-      ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+    const headColor = { r: 0, g: 191, b: 255 }; // #00BFFF
+    const tailColor = { r: 0, g: 0, b: 255 };   // blue
 
-      // Draw red apple if active
-      if (redApple) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(redApple.x * gridSize, redApple.y * gridSize, gridSize, gridSize);
+    // Helper to interpolate colors
+    function interpolateColor(start, end, t) {
+      const r = Math.round(start.r + (end.r - start.r) * t);
+      const g = Math.round(start.g + (end.g - start.g) * t);
+      const b = Math.round(start.b + (end.b - start.b) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // Draw the snake connected and smooth
+    function drawSnake() {
+      if (snake.length === 0) return;
+
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.lineWidth = gridSize;
+
+      for (let i = 0; i < snake.length; i++) {
+        const segment = snake[i];
+        const t = i / (snake.length - 1 || 1);
+        const color = interpolateColor(headColor, tailColor, t);
+
+        ctx.strokeStyle = color;
+
+        // Draw connection line between this segment and next (except last)
+        if (i < snake.length - 1) {
+          const next = snake[i + 1];
+          ctx.beginPath();
+          ctx.moveTo(segment.x * gridSize + gridSize/2, segment.y * gridSize + gridSize/2);
+          ctx.lineTo(next.x * gridSize + gridSize/2, next.y * gridSize + gridSize/2);
+          ctx.stroke();
+        }
       }
 
-      // Draw snake
-      snake.forEach((segment, index) => {
-        ctx.fillStyle = index === 0 ? "#00BFFF" : "blue";
-        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      // Draw snake segments as circles on top for smoothness & head highlight
+      for (let i = snake.length - 1; i >= 0; i--) {
+        const segment = snake[i];
+        const t = i / (snake.length - 1 || 1);
+        const color = interpolateColor(headColor, tailColor, t);
+
+        const x = segment.x * gridSize + gridSize / 2;
+        const y = segment.y * gridSize + gridSize / 2;
+
+        // Head: bigger circle with glow
+        if (i === 0) {
+          const gradient = ctx.createRadialGradient(x, y, gridSize * 0.25, x, y, gridSize * 0.6);
+          gradient.addColorStop(0, "rgba(0,191,255,1)");
+          gradient.addColorStop(1, "rgba(0,191,255,0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(x, y, gridSize * 0.6, 0, 2 * Math.PI);
+          ctx.fill();
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, gridSize * 0.45, 0, 2 * Math.PI);
+          ctx.fill();
+        } else {
+          // Body segments: normal circle
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x, y, gridSize * 0.45, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Draw white apples as glowing circles
+    function drawWhiteApples() {
+      whiteApples.forEach(apple => {
+        const x = apple.x * gridSize + gridSize / 2;
+        const y = apple.y * gridSize + gridSize / 2;
+
+        const gradient = ctx.createRadialGradient(x, y, 4, x, y, 12);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.fill();
       });
+    }
+
+    // Draw red apple as glowing circle
+    function drawRedApple() {
+      if (!redApple) return;
+
+      const x = redApple.x * gridSize + gridSize / 2;
+      const y = redApple.y * gridSize + gridSize / 2;
+
+      const gradient = ctx.createRadialGradient(x, y, 4, x, y, 12);
+      gradient.addColorStop(0, 'rgba(255,0,0,1)');
+      gradient.addColorStop(1, 'rgba(255,0,0,0)');
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawWhiteApples();
+      drawRedApple();
+      drawSnake();
     }
 
     function update() {
@@ -70,13 +230,11 @@
         y: snake[0].y + velocity.y
       };
 
-      // Wall collision
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
         resetGame();
         return;
       }
 
-      // Self collision
       for (let segment of snake) {
         if (segment.x === head.x && segment.y === head.y) {
           resetGame();
@@ -86,18 +244,21 @@
 
       snake.unshift(head);
 
-      // Eat white apple
-      if (head.x === apple.x && head.y === apple.y) {
-        applesEaten++;
-        growing = true;
-        placeApple();
-
-        if (applesEaten % 3 === 0) {
-          spawnRedApple();
+      for (let i = 0; i < whiteApples.length; i++) {
+        const apple = whiteApples[i];
+        if (head.x === apple.x && head.y === apple.y) {
+          growing = true;
+          applesEaten++;
+          score++;
+          updateScoreDisplay();
+          whiteApples.splice(i, 1);
+          if (applesEaten % 3 === 0) {
+            spawnRedApple();
+          }
+          break;
         }
       }
 
-      // Eat red apple
       if (redApple && head.x === redApple.x && head.y === redApple.y) {
         shrinkSnake();
         redApple = null;
@@ -109,7 +270,10 @@
         growing = false;
       }
 
-      // Decrease red apple timer
+      while (whiteApples.length < whiteAppleCount) {
+        whiteApples.push(randomEmptyTile());
+      }
+
       if (redApple) {
         redAppleTimer--;
         if (redAppleTimer <= 0) {
@@ -120,52 +284,53 @@
       lastDirection = { ...velocity };
     }
 
-    function placeApple() {
-      apple = randomEmptyTile();
+    function randomEmptyTile() {
+      let pos;
+      while (true) {
+        pos = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+        const occupied =
+          snake.some(seg => seg.x === pos.x && seg.y === pos.y) ||
+          whiteApples.some(ap => ap.x === pos.x && ap.y === pos.y) ||
+          (redApple && redApple.x === pos.x && redApple.y === pos.y);
+        if (!occupied) return pos;
+      }
     }
 
     function spawnRedApple() {
       redApple = randomEmptyTile();
-      redAppleTimer = 100; // lasts ~10 ticks (1s at 100ms per tick)
-    }
-
-    function randomEmptyTile() {
-      let newPos;
-      while (true) {
-        newPos = {
-          x: Math.floor(Math.random() * tileCount),
-          y: Math.floor(Math.random() * tileCount)
-        };
-        if (
-          !snake.some(segment => segment.x === newPos.x && segment.y === newPos.y) &&
-          (redApple == null || (newPos.x !== redApple.x || newPos.y !== redApple.y)) &&
-          (apple == null || (newPos.x !== apple.x || newPos.y !== apple.y))
-        ) {
-          return newPos;
-        }
-      }
+      redAppleTimer = 50;
     }
 
     function shrinkSnake() {
       const shrinkAmount = 3;
-      if (snake.length > 1) {
-        for (let i = 0; i < shrinkAmount; i++) {
-          if (snake.length > 1) {
-            snake.pop();
-          }
-        }
+      for (let i = 0; i < shrinkAmount && snake.length > 1; i++) {
+        snake.pop();
+        if (score > 1) score--;
       }
+      updateScoreDisplay();
+    }
+
+    function updateScoreDisplay() {
+      scoreDisplay.textContent = `Score: ${score}`;
     }
 
     function resetGame() {
-      alert("Game Over! Press OK to restart.");
+      alert("Game Over! Final Score: " + score);
       snake = [{ x: 10, y: 10 }];
       velocity = { x: 0, y: 0 };
-      growing = false;
       lastDirection = { x: 0, y: 0 };
+      growing = false;
       applesEaten = 0;
       redApple = null;
-      placeApple();
+      whiteApples = [];
+      score = 1;
+      updateScoreDisplay();
+      for (let i = 0; i < whiteAppleCount; i++) {
+        whiteApples.push(randomEmptyTile());
+      }
     }
 
     function gameTick() {
@@ -190,7 +355,17 @@
       }
     });
 
+    // Initialize white apples
+    for (let i = 0; i < whiteAppleCount; i++) {
+      whiteApples.push(randomEmptyTile());
+    }
+
     setInterval(gameTick, 100);
   </script>
+  <br>
+  <br> 
+  <footer>
+    © 2025 Simple Games Hub – Made by Oscar and Dad and Robot 47880!
+  </footer>
 </body>
 </html>
