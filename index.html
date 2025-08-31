@@ -22,11 +22,13 @@
 
     .game-container {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap; /* Don't wrap to the next line */
       justify-content: center;
       gap: 30px;
       margin: 50px auto;
-      max-width: 800px;
+      max-width: 1000px; /* Enough space for 4 cards */
+      overflow-x: auto;  /* Allow scroll if too wide */
+      padding: 0 10px;
     }
 
     .game-card {
@@ -36,6 +38,7 @@
       width: 200px;
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+      flex: 0 0 auto; /* Prevent card from shrinking */
     }
 
     .game-card:hover {
@@ -73,24 +76,24 @@
   <h1>🎮 Simple Games</h1>
 
   <div class="game-container">
-  <div class="game-card">
-    <a href="paddle.html">Paddle</a>
-    <p>Classic paddle action fun!</p>
+    <div class="game-card">
+      <a href="paddle.html">Paddle</a>
+      <p>Classic paddle action fun!</p>
+    </div>
+    <div class="game-card">
+      <a href="tetris.html">Tetris</a>
+      <p>Stack the blocks and survive!</p>
+    </div>
+    <div class="game-card">
+      <a href="snake.html">Snake</a>
+      <p>Eat, grow, and don't hit the wall!</p>
+    </div>
+    <div class="game-card">
+      <a href="./pack-man/pack-man.html">Pack man</a>
+      <p>Eat, and don't collide with the ghosts!</p>
+    </div>
   </div>
-  <div class="game-card">
-    <a href="tetris.html">Tetris</a>
-    <p>Stack the blocks and survive!</p>
-  </div>
-  <div class="game-card">
-    <a href="snake.html">Snake</a>
-    <p>Eat, grow, and don't hit the wall!</p>
-  </div>
-  <div class="game-card">
-    <a href="./pack-man/pack-man.html">Pack man</a>
-    <p>Eat, and don't collide with the ghosts!</p>
-  </div>
-</div>
-  
+
   <footer>
     © 2025 Simple Games Hub – Made by Oscar and Dad and Robot 14738!
   </footer>
