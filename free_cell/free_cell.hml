@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreeCell Skeleton</title>
+  <link rel="stylesheet" href="free_cell.css">
+  <style>
+    /* minimal inline styles in case CSS file not ready */
+    body {
+      background: #0b6623;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+    .board { display: flex; justify-content: center; margin-bottom: 20px; }
+    .cell, .pile {
+      position: relative;
+      width: 60px;
+      height: 90px;
+      border: 2px solid #fff;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .cell:last-child, .pile:last-child { margin-right: 0; }
+    .top-row .cell:nth-child(4) { margin-right: 30px; } /* gap between free cells and foundations */
+    .tableau { display: flex; justify-content: center; flex-wrap: wrap; max-width: 900px; gap: 6px; margin-bottom: 20px; }
+    footer { margin-top: 20px; font-size: 14px; color: #ddd; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>FreeCell Skeleton</h1>
+
+  <!-- Top row: 4 free cells + 4 foundations -->
+  <div class="board top-row" id="top">
+    <div class="cell" id="free1"></div>
+    <div class="cell" id="free2"></div>
+    <div class="cell" id="free3"></div>
+    <div class="cell" id="free4"></div>
+    <div class="cell" id="found1"></div>
+    <div class="cell" id="found2"></div>
+    <div class="cell" id="found3"></div>
+    <div class="cell" id="found4"></div>
+  </div>
+
+  <!-- Tableau piles -->
+  <div class="tableau" id="tableau">
+    <div class="pile" id="pile1"></div>
+    <div class="pile" id="pile2"></div>
+    <div class="pile" id="pile3"></div>
+    <div class="pile" id="pile4"></div>
+    <div class="pile" id="pile5"></div>
+    <div class="pile" id="pile6"></div>
+    <div class="pile" id="pile7"></div>
+    <div class="pile" id="pile8"></div>
+  </div>
+
+  <footer>© 2025 Simple Games Hub – Made by Oscar, Dad and Robot 14738!</footer>
+
+  <!-- link to external JS file -->
+  <script src="free_cell.js"></script>
+</body>
+</html>
+	
