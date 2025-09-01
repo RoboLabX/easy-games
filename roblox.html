@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Roblox Avatar Guessing Quiz</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    img { width: 150px; height: 150px; margin: 20px; }
+    .options { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; background: #eee; }
+    button:hover { background: #ddd; }
+    #status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Roblox Avatar Guessing Quiz</h1>
+  <div id="quiz"></div>
+  <p id="status"></p>
+
+  <script>
+    // Example avatars (replace with Roblox screenshots or images)
+    const avatars = [
+      { name: "Noob", img: "https://p.kindpng.com/picc/s/164-1644620_noob-roblox-sticker-by-karun-painter-roblox-noob.png" },
+      { name: "Bacon Hair", img: "https://p.kindpng.com/picc/s/492-4925372_savage-bacon-roblox-sticker-freetoedit-roblox-bacon-hair.png" },
+      { name: "Builderman", img: "https://via.placeholder.com/150?text=Builder" },
+      { name: "Guest", img: "https://p.kindpng.com/picc/s/408-4087092_transparent-roblox-guest-png-guests-roblox-png-download.png" }
+    ];
+
+    let score = 0, question = 0;
+
+    function newQuestion() {
+      if (question >= avatars.length) {
+        document.getElementById("quiz").innerHTML = "";
+        document.getElementById("status").innerText = "Game Over! Score: " + score + "/" + avatars.length;
+        return;
+      }
+
+      const quizDiv = document.getElementById("quiz");
+      quizDiv.innerHTML = "";
+
+      const current = avatars[question];
+
+      // show avatar
+      const img = document.createElement("img");
+      img.src = current.img;
+      quizDiv.appendChild(img);
+
+      // generate options
+      let options = [current.name];
+      while (options.length < 4 && options.length < avatars.length) {
+        let random = avatars[Math.floor(Math.random() * avatars.length)].name;
+        if (!options.includes(random)) options.push(random);
+      }
+      options.sort(() => Math.random() - 0.5);
+
+      // show options
+      const optionsDiv = document.createElement("div");
+      optionsDiv.className = "options";
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(opt, current.name);
+        optionsDiv.appendChild(btn);
+      });
+      quizDiv.appendChild(optionsDiv);
+
+      document.getElementById("status").innerText = `Question ${question + 1} of ${avatars.length}`;
+    }
+
+    function checkAnswer(answer, correct) {
+      if (answer === correct) {
+        score++;
+        alert("Correct!");
+      } else {
+        alert("Wrong! Correct answer was " + correct);
+      }
+      question++;
+      newQuestion();
+    }
+
+    newQuestion();
+  </script>
+</body>
+</html>
